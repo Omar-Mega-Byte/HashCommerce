@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="bg-gray-50 min-h-screen py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="bg-white shadow-xl rounded-lg overflow-hidden">
+            <div class="px-6 py-8 border-b border-gray-200">
+                <h1 class="text-3xl font-bold text-gray-900">Welcome, {{ user.get_full_name|default:user.email }}</h1>
+                <p class="mt-2 text-gray-600">This is your personal dashboard.</p>
+            </div>
+            
+            <div class="px-6 py-4 bg-gray-50">
+                <h2 class="text-xl font-semibold text-gray-800">Account Information</h2>
+            </div>
+            
+            <div class="px-6 py-6 divide-y divide-gray-200">
+                <div class="py-4 flex justify-between items-center">
+                    <div>
+                        <h3 class="text-lg font-medium text-gray-900">Email Address</h3>
+                        <p class="mt-1 text-gray-500">{{ user.email }}</p>
+                    </div>
+                </div>
+                
+                <div class="py-4 flex justify-between items-center">
+                    <div>
+                        <h3 class="text-lg font-medium text-gray-900">Account Type</h3>
+                        <p class="mt-1 text-gray-500">{{ user.get_type_display }}</p>
+                    </div>
+                </div>
+                
+                <div class="py-4 flex justify-between items-center">
+                    <div>
+                        <h3 class="text-lg font-medium text-gray-900">Member Since</h3>
+                        <p class="mt-1 text-gray-500">{{ user.date_joined|date:"F j, Y" }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="px-6 py-4 bg-gray-50">
+                <h2 class="text-xl font-semibold text-gray-800">API Access</h2>
+            </div>
+            
+            <div class="px-6 py-6">
+                <p class="text-gray-600 mb-4">
+                    This platform provides JWT token-based API authentication. You can use your credentials to obtain JWT tokens for API access.
+                </p>
+                
+                <div class="bg-gray-100 p-4 rounded-md">
+                    <h3 class="text-md font-medium text-gray-900 mb-2">Sample API Endpoints:</h3>
+                    <ul class="list-disc pl-5 space-y-1 text-sm text-gray-700">
+                        <li>POST /api/token/ - Obtain JWT tokens</li>
+                        <li>POST /api/token/refresh/ - Refresh JWT tokens</li>
+                        <li>GET /api/products/ - List all products</li>
+                        <li>GET /api/cart/ - View your cart</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="px-6 py-4 mt-4 bg-gray-100 flex items-center justify-between">
+                <span class="text-sm text-gray-500">Need help? Contact our support team.</span>
+                <a href="#" class="text-blue-600 hover:text-blue-800 font-medium">Contact Support</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

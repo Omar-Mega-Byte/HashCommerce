@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin Panel{% endblock %} - E-Commerce</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .sidebar-active {
+            background-color: rgba(59, 130, 246, 0.1);
+            border-left: 4px solid #3b82f6;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-gray-100 min-h-screen flex">
+    <!-- Sidebar -->
+    <div class="bg-white w-64 py-4 px-2 flex-shrink-0 shadow-md">
+        <div class="flex justify-center mb-6">
+            <a href="{% url 'admin_panel:dashboard' %}" class="text-2xl font-bold text-blue-600">Admin Panel</a>
+        </div>
+        
+        <div class="mt-6">
+            <div class="text-gray-500 text-xs font-semibold px-3 mb-2">MENU</div>
+            <ul>
+                <li class="mb-1">
+                    <a href="{% url 'admin_panel:dashboard' %}" class="{% if request.path == '/admin-page/' %}sidebar-active{% endif %} block px-4 py-2 rounded text-gray-900 hover:bg-blue-50 transition-colors duration-200">
+                        <i class="fas fa-tachometer-alt mr-2"></i> Dashboard
+                    </a>
+                </li>
+                <li class="mb-1">
+                    <a href="{% url 'admin_panel:product_list' %}" class="{% if '/admin-page/products/' in request.path %}sidebar-active{% endif %} block px-4 py-2 rounded text-gray-900 hover:bg-blue-50 transition-colors duration-200">
+                        <i class="fas fa-box mr-2"></i> Products
+                    </a>
+                </li>
+                <li class="mb-1">
+                    <a href="{% url 'admin_panel:user_list' %}" class="{% if '/admin-page/users/' in request.path %}sidebar-active{% endif %} block px-4 py-2 rounded text-gray-900 hover:bg-blue-50 transition-colors duration-200">
+                        <i class="fas fa-users mr-2"></i> Users
+                    </a>
+                </li>
+                <li class="mb-1">
+                    <a href="{% url 'admin_panel:contact_list' %}" class="{% if '/admin-page/contacts/' in request.path %}sidebar-active{% endif %} block px-4 py-2 rounded text-gray-900 hover:bg-blue-50 transition-colors duration-200">
+                        <i class="fas fa-envelope mr-2"></i> Contact Messages
+                    </a>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="mt-auto px-3 py-4 border-t absolute bottom-0 w-64">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <span class="inline-block h-8 w-8 rounded-full bg-gray-200 text-center leading-8">
+                        <i class="fas fa-user"></i>
+                    </span>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-gray-900">{{ request.user.get_full_name|default:request.user.email }}</p>
+                    <a href="{% url 'products:index' %}" class="text-xs text-gray-500 hover:text-blue-600">
+                        Back to Site
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <!-- Top Bar -->
+        <header class="bg-white shadow-sm h-16 flex items-center">
+            <div class="flex justify-between items-center w-full px-6">
+                <h1 class="text-2xl font-semibold text-gray-800">{% block page_title %}Dashboard{% endblock %}</h1>
+                <div>
+                    <form method="POST" action="{% url 'logout' %}" class="inline-form">
+                        {% csrf_token %}
+                        <button type="submit" class="text-gray-500 hover:text-gray-700">
+                            <i class="fas fa-sign-out-alt mr-1"></i> Logout
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Flash Messages -->
+        {% if messages %}
+        <div class="px-6 py-2">
+            {% for message in messages %}
+            <div class="{% if message.tags == 'success' %}bg-green-100 border border-green-400 text-green-700{% elif message.tags == 'error' %}bg-red-100 border border-red-400 text-red-700{% else %}bg-blue-100 border border-blue-400 text-blue-700{% endif %} px-4 py-3 rounded relative mb-2" role="alert">
+                <span class="block sm:inline">{{ message }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto px-6 py-4">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html> 

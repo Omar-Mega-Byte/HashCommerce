@@ -1,0 +1,230 @@
+{% extends 'base.html' %}
+
+{% block title %}Your Cart{% endblock %}
+
+{% block content %}
+<div class="bg-gray-50 py-10 min-h-screen">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between pb-6 border-b border-gray-200">
+            <h1 class="text-3xl font-extrabold text-gray-900">Shopping Cart</h1>
+            <div class="flex items-center space-x-4">
+                <a href="{% url 'cart:transaction_history' %}" class="text-sm font-medium text-blue-600 hover:text-blue-500">
+                    <i class="fas fa-history mr-1"></i> Order History
+                </a>
+                {% if cart|length > 0 %}
+                <span class="px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full">{{ cart|length }} item{% if cart|length > 1 %}s{% endif %}</span>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if cart|length > 0 %}
+        <div class="mt-8 lg:grid lg:grid-cols-12 lg:gap-x-12 lg:items-start xl:gap-x-16">
+            <section class="lg:col-span-7">
+                <ul role="list" class="border-t border-b border-gray-200 divide-y divide-gray-200">
+                    {% for item in cart %}
+                    <li class="flex py-6 sm:py-8">
+                        <div class="flex-shrink-0 relative">
+                            <img src="{{ item.image }}" alt="{{ item.name }}" class="w-24 h-24 sm:w-32 sm:h-32 object-cover object-center rounded-md">
+                            {% if item.discount %}
+                            <span class="absolute top-0 right-0 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full transform translate-x-1/2 -translate-y-1/2">
+                                {{ item.discount }}% OFF
+                            </span>
+                            {% endif %}
+                        </div>
+
+                        <div class="ml-4 flex-1 flex flex-col sm:ml-6">
+                            <div>
+                                <div class="flex justify-between">
+                                    <h3 class="text-lg font-medium text-gray-900">
+                                        <a href="{% url 'products:detail' item.id %}" class="hover:text-blue-600">{{ item.name }}</a>
+                                    </h3>
+                                    <div class="ml-4 text-right">
+                                        {% if item.discount %}
+                                        <p class="line-through text-sm text-gray-500">{{ item.price }} EGP</p>
+                                        <p class="text-lg font-medium text-red-600">{{ item.discounted_price }} EGP</p>
+                                        {% else %}
+                                        <p class="text-lg font-medium text-gray-900">{{ item.price }} EGP</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <p class="mt-1 text-sm text-gray-500">Type: {{ item.type }}</p>
+                                <p class="mt-1 text-sm text-gray-500 line-clamp-2">{{ item.description }}</p>
+                            </div>
+
+                            <div class="mt-4 flex-1 flex items-end justify-between">
+                                <div class="flex items-center space-x-2">
+                                    <form action="{% url 'cart:cart_update' item.id %}" method="POST" class="flex items-center">
+                                        {% csrf_token %}
+                                        <label for="quantity-{{ item.id }}" class="sr-only">Quantity</label>
+                                        <select id="quantity-{{ item.id }}" name="quantity" class="rounded-md border border-gray-300 text-base font-medium text-gray-700 text-center focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" onchange="this.form.submit()">
+                                            {% for i in "12345"|make_list %}
+                                            <option value="{{ i }}" {% if item.quantity == i|add:"0" %}selected{% endif %}>{{ i }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </form>
+                                </div>
+                                
+                                <form action="{% url 'cart:cart_remove' item.id %}" method="POST">
+                                    {% csrf_token %}
+                                    <button type="submit" class="text-sm font-medium text-red-600 hover:text-red-500 flex items-center">
+                                        <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                        </svg>
+                                        Remove
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                
+                <!-- Continue shopping button -->
+                <div class="mt-6">
+                    <a href="{% url 'products:index' %}" class="text-sm font-medium text-blue-600 hover:text-blue-500 flex items-center">
+                        <svg class="mr-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12"></path>
+                        </svg>
+                        Continue Shopping
+                    </a>
+                </div>
+            </section>
+
+            <!-- Order summary -->
+            <section aria-labelledby="summary-heading" class="mt-16 bg-white rounded-lg px-6 py-6 sm:p-6 lg:p-8 lg:mt-0 lg:col-span-5 shadow-md">
+                <h2 id="summary-heading" class="text-lg font-medium text-gray-900">Order Summary</h2>
+
+                <dl class="mt-6 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <dt class="text-sm text-gray-600">Subtotal</dt>
+                        <dd class="text-sm font-medium text-gray-900">{{ cart.get_total_price }} EGP</dd>
+                    </div>
+                    
+                    <div class="flex items-center justify-between">
+                        <dt class="text-sm text-gray-600">Shipping estimate</dt>
+                        <dd class="text-sm font-medium text-gray-900">50.00 EGP</dd>
+                    </div>
+                    
+                    <div class="flex items-center justify-between">
+                        <dt class="text-sm text-gray-600">Tax estimate (14%)</dt>
+                        <dd class="text-sm font-medium text-gray-900">
+                            {{ cart.get_tax|default:"0.00" }} EGP
+                        </dd>
+                    </div>
+                    
+                    <div class="border-t border-gray-200 pt-4 flex items-center justify-between">
+                        <dt class="text-base font-medium text-gray-900">Order total</dt>
+                        <dd class="text-base font-medium text-gray-900">
+                            {{ cart.get_total_with_tax|default:cart.get_total_price }} EGP
+                        </dd>
+                    </div>
+                </dl>
+
+                <form action="{% url 'cart:cart_clear' %}" method="POST" class="mt-6">
+                    {% csrf_token %}
+                    
+                    <!-- Payment method selection -->
+                    <div class="mb-6">
+                        <label for="payment_method" class="block text-sm font-medium text-gray-700 mb-2">Payment Method</label>
+                        <div class="grid grid-cols-3 gap-3">
+                            <div>
+                                <input type="radio" id="credit_card" name="payment_method" value="credit_card" class="sr-only peer" checked>
+                                <label for="credit_card" class="flex flex-col items-center justify-center text-center p-3 border rounded-md cursor-pointer peer-checked:bg-blue-50 peer-checked:border-blue-500">
+                                    <i class="fab fa-cc-visa text-blue-700 text-2xl"></i>
+                                    <span class="mt-2 text-xs font-medium">Credit Card</span>
+                                </label>
+                            </div>
+                            
+                            <div>
+                                <input type="radio" id="paypal" name="payment_method" value="paypal" class="sr-only peer">
+                                <label for="paypal" class="flex flex-col items-center justify-center text-center p-3 border rounded-md cursor-pointer peer-checked:bg-blue-50 peer-checked:border-blue-500">
+                                    <i class="fab fa-paypal text-blue-500 text-2xl"></i>
+                                    <span class="mt-2 text-xs font-medium">PayPal</span>
+                                </label>
+                            </div>
+                            
+                            <div>
+                                <input type="radio" id="cash_on_delivery" name="payment_method" value="cash_on_delivery" class="sr-only peer">
+                                <label for="cash_on_delivery" class="flex flex-col items-center justify-center text-center p-3 border rounded-md cursor-pointer peer-checked:bg-blue-50 peer-checked:border-blue-500">
+                                    <i class="fas fa-money-bill-wave text-green-600 text-2xl"></i>
+                                    <span class="mt-2 text-xs font-medium">Cash on Delivery</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="w-full bg-blue-600 border border-transparent rounded-md shadow-sm py-3 px-4 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Proceed to Checkout
+                    </button>
+                </form>
+
+                <!-- Shipping info -->
+                <div class="mt-6 text-sm text-gray-500">
+                    <div class="flex items-center space-x-2 mb-2">
+                        <svg class="h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <span>Free shipping on orders over 1000 EGP</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <svg class="h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span>Estimated delivery: 3-5 business days</span>
+                    </div>
+                </div>
+                
+                <!-- Payment methods -->
+                <div class="mt-8 border-t border-gray-200 pt-4">
+                    <h3 class="text-sm font-medium text-gray-900">We accept</h3>
+                    <div class="mt-2 flex space-x-2">
+                        <div class="p-2 border rounded-md">
+                            <i class="fab fa-cc-visa text-blue-700 text-2xl"></i>
+                        </div>
+                        <div class="p-2 border rounded-md">
+                            <i class="fab fa-cc-mastercard text-red-500 text-2xl"></i>
+                        </div>
+                        <div class="p-2 border rounded-md">
+                            <i class="fab fa-cc-paypal text-blue-500 text-2xl"></i>
+                        </div>
+                        <div class="p-2 border rounded-md">
+                            <i class="fas fa-money-bill-wave text-green-600 text-2xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+        {% else %}
+        <div class="py-12">
+            <div class="text-center">
+                <svg class="mx-auto h-24 w-24 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                </svg>
+                <h3 class="mt-2 text-xl font-medium text-gray-900">Your cart is empty</h3>
+                <p class="mt-1 text-sm text-gray-500">Looks like you haven't added any items to your cart yet.</p>
+                <div class="mt-6">
+                    <a href="{% url 'products:index' %}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Start Shopping
+                    </a>
+                </div>
+                
+                <div class="mt-4">
+                    <a href="{% url 'cart:transaction_history' %}" class="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-500">
+                        <i class="fas fa-history mr-1"></i> View your order history
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Featured Products -->
+            <div class="mt-16">
+                <h2 class="text-xl font-medium text-gray-900 mb-6">You might be interested in</h2>
+                <div class="grid grid-cols-1 gap-y-10 sm:grid-cols-2 gap-x-6 lg:grid-cols-4 xl:grid-cols-4 xl:gap-x-8">
+                    <!-- This would ideally be populated with recommended products -->
+                    <p class="col-span-full text-center text-gray-500">Recommended products will appear here</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %} 

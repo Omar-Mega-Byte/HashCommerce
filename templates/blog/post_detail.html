@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ post.title }}{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'products:index' %}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'blog:list' %}">Blog</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ post.title }}</li>
+                </ol>
+            </nav>
+            
+            <article class="blog-post">
+                <h1 class="blog-post-title mb-3">{{ post.title }}</h1>
+                <p class="blog-post-meta text-muted mb-4">
+                    {{ post.created_at|date:"F j, Y" }} by {{ post.author.username }}
+                </p>
+                
+                {% if post.image %}
+                <img src="{{ post.image.url }}" class="img-fluid rounded mb-4" alt="{{ post.title }}">
+                {% endif %}
+                
+                <div class="blog-post-content">
+                    {{ post.content|linebreaks }}
+                </div>
+            </article>
+            
+            <div class="mt-5">
+                <a href="{% url 'blog:list' %}" class="btn btn-outline-primary">&larr; Back to Blog</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,90 @@
+{% extends 'admin_panel/base_admin.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="bg-white shadow-md rounded-lg p-6">
+    <form method="POST" enctype="multipart/form-data" class="space-y-6">
+        {% csrf_token %}
+        
+        {% if form.errors %}
+        <div class="bg-red-50 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <strong class="font-bold">There were errors with your submission:</strong>
+            <ul class="mt-1 list-disc list-inside">
+                {% for field in form %}
+                    {% for error in field.errors %}
+                        <li>{{ field.label }}: {{ error }}</li>
+                    {% endfor %}
+                {% endfor %}
+                {% for error in form.non_field_errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label for="{{ form.name.id_for_label }}" class="block text-sm font-medium text-gray-700">Product Name <span class="text-red-500">*</span></label>
+                <div class="mt-1">
+                    {{ form.name }}
+                </div>
+            </div>
+            
+            <div>
+                <label for="{{ form.type.id_for_label }}" class="block text-sm font-medium text-gray-700">Product Type <span class="text-red-500">*</span></label>
+                <div class="mt-1">
+                    {{ form.type }}
+                </div>
+            </div>
+            
+            <div>
+                <label for="{{ form.price.id_for_label }}" class="block text-sm font-medium text-gray-700">Price ($) <span class="text-red-500">*</span></label>
+                <div class="mt-1">
+                    {{ form.price }}
+                </div>
+            </div>
+            
+            <div>
+                <label for="{{ form.discount.id_for_label }}" class="block text-sm font-medium text-gray-700">Discount (%)</label>
+                <div class="mt-1">
+                    {{ form.discount }}
+                </div>
+                <p class="mt-1 text-xs text-gray-500">Leave empty for no discount</p>
+            </div>
+            
+            <div class="md:col-span-2">
+                <label for="{{ form.description.id_for_label }}" class="block text-sm font-medium text-gray-700">Description <span class="text-red-500">*</span></label>
+                <div class="mt-1">
+                    {{ form.description }}
+                </div>
+            </div>
+            
+            <div class="md:col-span-2">
+                <label for="{{ form.image.id_for_label }}" class="block text-sm font-medium text-gray-700">Product Image</label>
+                <div class="mt-1 flex items-center">
+                    {% if product and product.image %}
+                    <div class="mr-4">
+                        <img src="{{ product.image.url }}" alt="{{ product.name }}" class="h-20 w-20 object-cover rounded">
+                    </div>
+                    {% endif %}
+                    <div class="flex-1">
+                        {{ form.image }}
+                    </div>
+                </div>
+                <p class="mt-1 text-xs text-gray-500">Recommended size: 800x800 pixels</p>
+            </div>
+        </div>
+        
+        <div class="flex justify-between pt-6">
+            <a href="{% url 'admin_panel:product_list' %}" class="py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                Cancel
+            </a>
+            <button type="submit" class="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                {{ submit_text }}
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %} 

@@ -1,0 +1,107 @@
+{% extends 'admin_panel/base_admin.html' %}
+
+{% block title %}User Details{% endblock %}
+{% block page_title %}User Details{% endblock %}
+
+{% block content %}
+<div class="mb-6 flex justify-between items-center">
+    <div>
+        <h2 class="text-xl font-semibold">{{ user_obj.get_full_name|default:user_obj.email }}</h2>
+        <p class="text-sm text-gray-600">Joined on {{ user_obj.date_joined|date:"F j, Y" }}</p>
+    </div>
+    <div>
+        <a href="{% url 'admin_panel:user_edit' user_obj.id %}" class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700">
+            <i class="fas fa-edit mr-2"></i> Edit User
+        </a>
+    </div>
+</div>
+
+<div class="bg-white shadow-md rounded-lg overflow-hidden">
+    <div class="p-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Basic Information</h3>
+                <div class="space-y-4">
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">Email</p>
+                        <p class="mt-1">{{ user_obj.email }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">Full Name</p>
+                        <p class="mt-1">{{ user_obj.get_full_name|default:"Not provided" }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">User Type</p>
+                        <p class="mt-1">
+                            <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {% if user_obj.is_admin %}bg-purple-100 text-purple-800{% elif user_obj.is_staff %}bg-blue-100 text-blue-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {% if user_obj.is_admin %}
+                                    Admin
+                                {% elif user_obj.is_staff %}
+                                    Staff
+                                {% else %}
+                                    Regular User
+                                {% endif %}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div>
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Account Status</h3>
+                <div class="space-y-4">
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">Status</p>
+                        <p class="mt-1">
+                            <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {% if user_obj.is_active %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                                {% if user_obj.is_active %}Active{% else %}Inactive{% endif %}
+                            </span>
+                        </p>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">Last Login</p>
+                        <p class="mt-1">{{ user_obj.last_login|date:"F j, Y, g:i a"|default:"Never" }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">Password Hash</p>
+                        <div class="mt-1 relative">
+                            <div class="flex">
+                                <input type="password" id="password-hash" class="border rounded px-3 py-2 w-full bg-gray-50" value="{{ user_obj.password }}" readonly>
+                                <button type="button" id="toggle-password" class="ml-2 bg-gray-200 hover:bg-gray-300 rounded px-3 py-2">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const togglePasswordBtn = document.getElementById('toggle-password');
+        const passwordHashInput = document.getElementById('password-hash');
+        
+        if (togglePasswordBtn && passwordHashInput) {
+            togglePasswordBtn.addEventListener('click', function() {
+                const type = passwordHashInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordHashInput.setAttribute('type', type);
+                
+                // Toggle icon
+                const icon = togglePasswordBtn.querySelector('i');
+                if (type === 'password') {
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                } else {
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                }
+            });
+        }
+    });
+</script>
+{% endblock %} 

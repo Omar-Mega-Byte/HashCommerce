@@ -1,0 +1,61 @@
+{% extends 'admin_panel/base_admin.html' %}
+
+{% block title %}Contact Message Detail{% endblock %}
+{% block page_title %}Contact Message Detail{% endblock %}
+
+{% block content %}
+<div class="mb-6 flex justify-between items-center">
+    <div>
+        <h2 class="text-xl font-semibold">{{ contact.subject }}</h2>
+        <p class="text-sm text-gray-600">From: {{ contact.name }} ({{ contact.email }})</p>
+    </div>
+    <div>
+        <a href="{% url 'admin_panel:contact_delete' contact.id %}" class="bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-red-700 ml-2">
+            <i class="fas fa-trash mr-2"></i> Delete
+        </a>
+    </div>
+</div>
+
+<div class="bg-white shadow-md rounded-lg overflow-hidden">
+    <div class="p-6">
+        <div class="mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center">
+                    <div class="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center mr-4">
+                        <i class="fas fa-user text-gray-500"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-medium">{{ contact.name }}</h3>
+                        <p class="text-sm text-gray-600">{{ contact.email }}</p>
+                    </div>
+                </div>
+                <div class="text-sm text-gray-500">
+                    {{ contact.created_at|date:"F j, Y, g:i a" }}
+                </div>
+            </div>
+            
+            <div class="p-4 bg-gray-50 rounded-lg mt-4">
+                <h3 class="font-semibold mb-2">Message:</h3>
+                <div class="text-gray-700 whitespace-pre-line">{{ contact.message }}</div>
+            </div>
+        </div>
+        
+        <div class="border-t border-gray-200 pt-4 mt-4">
+            <div class="flex justify-between">
+                <a href="{% url 'admin_panel:contact_list' %}" class="text-blue-600 flex items-center">
+                    <i class="fas fa-arrow-left mr-2"></i> Back to all messages
+                </a>
+                {% if not contact.is_read %}
+                <form method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="mark_as_read" value="true">
+                    <button type="submit" class="text-blue-600 hover:text-blue-800">
+                        <i class="fas fa-check mr-1"></i> Mark as read
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

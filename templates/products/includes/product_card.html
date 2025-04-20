@@ -1,0 +1,109 @@
+{% load static %}
+
+<div class="group bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 relative">
+    <!-- Badge for new items or discounts -->
+    {% if product.discount %}
+    <div class="absolute top-2 right-2 z-10 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+        {{ product.discount }}% OFF
+    </div>
+    {% endif %}
+    
+    <!-- Product image with overlay -->
+    <div class="relative overflow-hidden w-full h-64">
+        <a href="{% url 'products:detail' product.id %}" class="absolute inset-0 w-full h-full">
+            <img class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                src="{{ product.image_url }}"
+                alt="{{ product.name }}">
+            <div class="absolute inset-0 bg-black opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
+        </a>
+        
+        <!-- Quick actions overlay -->
+        <div class="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex justify-center space-x-2">
+            <a href="{% url 'products:detail' product.id %}" class="w-8 h-8 rounded-full bg-white flex items-center justify-center hover:bg-gray-100 transition-colors">
+                <i class="fas fa-eye text-gray-800"></i>
+            </a>
+            
+            {% if user.is_authenticated %}
+            <form action="{% url 'cart:cart_add' product.id %}" method="POST">
+                {% csrf_token %}
+                <button type="submit" class="w-8 h-8 rounded-full bg-white flex items-center justify-center hover:bg-gray-100 transition-colors">
+                    <i class="fas fa-shopping-cart text-gray-800"></i>
+                </button>
+            </form>
+            {% else %}
+            <a href="{% url 'login' %}" class="w-8 h-8 rounded-full bg-white flex items-center justify-center hover:bg-gray-100 transition-colors">
+                <i class="fas fa-shopping-cart text-gray-800"></i>
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Product details -->
+    <div class="p-4">
+        <div class="flex justify-between items-start">
+            <div>
+                <span class="text-xs font-medium text-gray-500 uppercase">{{ product.type }}</span>
+                <h3 class="font-semibold text-gray-800 mt-1 group-hover:text-blue-600 transition-colors">
+                    <a href="{% url 'products:detail' product.id %}">{{ product.name }}</a>
+                </h3>
+            </div>
+            
+            <!-- Price -->
+            <div class="flex flex-col items-end">
+                {% if product.discount %}
+                <span class="line-through text-xs text-gray-500">{{ product.price|floatformat:2 }} EGP</span>
+                <span class="font-bold text-red-600">{{ product.discounted_price|floatformat:2 }} EGP</span>
+                {% else %}
+                <span class="font-bold text-gray-900">{{ product.price|floatformat:2 }} EGP</span>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Description (truncated) -->
+        <p class="mt-2 text-sm text-gray-600 line-clamp-2">{{ product.description|truncatechars:75 }}</p>
+        
+        <!-- Add to cart button (desktop) -->
+        <div class="mt-4 hidden sm:block">
+            {% if user.is_authenticated %}
+            <form action="{% url 'cart:cart_add' product.id %}" method="POST">
+                {% csrf_token %}
+                <button type="submit" class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors duration-200 flex items-center justify-center">
+                    <i class="fas fa-shopping-cart mr-2"></i> Add to Cart
+                </button>
+            </form>
+            {% else %}
+            <a href="{% url 'login' %}" class="block w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors duration-200 text-center">
+                <i class="fas fa-sign-in-alt mr-2"></i> Login to Add
+            </a>
+            {% endif %}
+        </div>
+        
+        <!-- Mobile view buttons -->
+        <div class="mt-4 grid grid-cols-2 gap-2 sm:hidden">
+            <a href="{% url 'products:detail' product.id %}" class="py-2 text-xs bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-md transition-colors duration-200 text-center">
+                View Details
+            </a>
+            {% if user.is_authenticated %}
+            <form action="{% url 'cart:cart_add' product.id %}" method="POST" class="contents">
+                {% csrf_token %}
+                <button type="submit" class="py-2 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors duration-200">
+                    Add to Cart
+                </button>
+            </form>
+            {% else %}
+            <a href="{% url 'login' %}" class="py-2 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors duration-200 text-center">
+                Login to Add
+            </a>
+            {% endif %}
+        </div>
+        
+        <!-- Additional info -->
+        <div class="mt-4 flex justify-between items-center text-xs text-gray-500">
+            <span>{{ product.created_at|timesince }} ago</span>
+            <div class="flex items-center">
+                <i class="fas fa-star text-yellow-400 mr-1"></i>
+                <span>4.5 (24)</span>
+            </div>
+        </div>
+    </div>
+</div> 

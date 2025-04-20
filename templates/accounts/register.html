@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+
+{% block title %}Register{% endblock %}
+
+{% block content %}
+<div class="flex min-h-screen items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="w-full max-w-md space-y-8">
+        <div>
+            <h2 class="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">Create a new account</h2>
+            <p class="mt-2 text-center text-sm text-gray-600">
+                Or
+                <a href="{% url 'login' %}" class="font-medium text-blue-600 hover:text-blue-500">sign in to your existing account</a>
+            </p>
+        </div>
+        
+        <form class="mt-8 space-y-6" action="{% url 'register' %}" method="POST">
+            {% csrf_token %}
+            
+            {% if form.errors %}
+            <div class="rounded-md bg-red-50 p-4">
+                <div class="flex">
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-red-800">There were errors with your submission</h3>
+                        <div class="mt-2 text-sm text-red-700">
+                            <ul class="list-disc pl-5 space-y-1">
+                                {% for field in form %}
+                                    {% for error in field.errors %}
+                                        <li>{{ field.label }}: {{ error }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                                {% for error in form.non_field_errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="rounded-md shadow-sm space-y-4">
+                <div>
+                    <label for="id_email" class="block text-sm font-medium text-gray-700">Email address</label>
+                    <div class="mt-1">
+                        {{ form.email }}
+                    </div>
+                </div>
+
+                <div>
+                    <label for="id_first_name" class="block text-sm font-medium text-gray-700">First name</label>
+                    <div class="mt-1">
+                        {{ form.first_name }}
+                    </div>
+                </div>
+
+                <div>
+                    <label for="id_last_name" class="block text-sm font-medium text-gray-700">Last name</label>
+                    <div class="mt-1">
+                        {{ form.last_name }}
+                    </div>
+                </div>
+
+                <div>
+                    <label for="id_password1" class="block text-sm font-medium text-gray-700">Password</label>
+                    <div class="mt-1">
+                        {{ form.password1 }}
+                    </div>
+                    <div id="password-strength-meter" class="mt-2 hidden">
+                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                            <div id="password-strength-bar" class="h-2.5 rounded-full" style="width: 0%"></div>
+                        </div>
+                        <p id="password-strength-text" class="mt-1 text-xs"></p>
+                    </div>
+                    <div class="mt-2 text-xs text-gray-500">
+                        <p>Password must:</p>
+                        <ul class="list-disc pl-5">
+                            <li id="length-check" class="text-gray-500">Be at least 8 characters long</li>
+                            <li id="uppercase-check" class="text-gray-500">Contain at least one uppercase letter</li>
+                            <li id="lowercase-check" class="text-gray-500">Contain at least one lowercase letter</li>
+                            <li id="number-check" class="text-gray-500">Contain at least one number</li>
+                            <li id="special-check" class="text-gray-500">Contain at least one special character</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="id_password2" class="block text-sm font-medium text-gray-700">Confirm password</label>
+                    <div class="mt-1">
+                        {{ form.password2 }}
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <button type="submit" class="group relative flex w-full justify-center rounded-md border border-transparent bg-blue-600 py-2 px-4 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                    Sign up
+                </button>
+            </div>
+        </form>
+        
+        <!-- JWT Info -->
+        <div class="mt-6 border-t border-gray-200 pt-6">
+            <div class="text-center text-xs text-gray-500">
+                <p>By registering, you will also have access to JWT authentication for API access.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const passwordInput = document.getElementById('password-strength');
+    const strengthMeter = document.getElementById('password-strength-meter');
+    const strengthBar = document.getElementById('password-strength-bar');
+    const strengthText = document.getElementById('password-strength-text');
+    
+    // Password requirement checkers
+    const lengthCheck = document.getElementById('length-check');
+    const uppercaseCheck = document.getElementById('uppercase-check');
+    const lowercaseCheck = document.getElementById('lowercase-check');
+    const numberCheck = document.getElementById('number-check');
+    const specialCheck = document.getElementById('special-check');
+    
+    if (passwordInput) {
+        strengthMeter.classList.remove('hidden');
+        
+        passwordInput.addEventListener('input', function() {
+            const password = passwordInput.value;
+            let strength = 0;
+            let failedChecks = 0;
+            
+            // Check length
+            if (password.length >= 8) {
+                strength += 20;
+                lengthCheck.classList.remove('text-gray-500');
+                lengthCheck.classList.add('text-green-500');
+            } else {
+                failedChecks++;
+                lengthCheck.classList.remove('text-green-500');
+                lengthCheck.classList.add('text-gray-500');
+            }
+            
+            // Check uppercase
+            if (/[A-Z]/.test(password)) {
+                strength += 20;
+                uppercaseCheck.classList.remove('text-gray-500');
+                uppercaseCheck.classList.add('text-green-500');
+            } else {
+                failedChecks++;
+                uppercaseCheck.classList.remove('text-green-500');
+                uppercaseCheck.classList.add('text-gray-500');
+            }
+            
+            // Check lowercase
+            if (/[a-z]/.test(password)) {
+                strength += 20;
+                lowercaseCheck.classList.remove('text-gray-500');
+                lowercaseCheck.classList.add('text-green-500');
+            } else {
+                failedChecks++;
+                lowercaseCheck.classList.remove('text-green-500');
+                lowercaseCheck.classList.add('text-gray-500');
+            }
+            
+            // Check number
+            if (/[0-9]/.test(password)) {
+                strength += 20;
+                numberCheck.classList.remove('text-gray-500');
+                numberCheck.classList.add('text-green-500');
+            } else {
+                failedChecks++;
+                numberCheck.classList.remove('text-green-500');
+                numberCheck.classList.add('text-gray-500');
+            }
+            
+            // Check special char
+            if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+                strength += 20;
+                specialCheck.classList.remove('text-gray-500');
+                specialCheck.classList.add('text-green-500');
+            } else {
+                failedChecks++;
+                specialCheck.classList.remove('text-green-500');
+                specialCheck.classList.add('text-gray-500');
+            }
+            
+            // Update the strength meter
+            strengthBar.style.width = strength + '%';
+            
+            // Change color based on strength
+            if (strength < 40) {
+                strengthBar.className = 'h-2.5 rounded-full bg-red-500';
+                strengthText.textContent = 'Weak password';
+                strengthText.className = 'mt-1 text-xs text-red-500';
+            } else if (strength < 80) {
+                strengthBar.className = 'h-2.5 rounded-full bg-yellow-500';
+                strengthText.textContent = 'Medium strength password';
+                strengthText.className = 'mt-1 text-xs text-yellow-600';
+            } else {
+                strengthBar.className = 'h-2.5 rounded-full bg-green-500';
+                strengthText.textContent = 'Strong password';
+                strengthText.className = 'mt-1 text-xs text-green-500';
+            }
+        });
+    }
+});
+</script>
+{% endblock %} 
