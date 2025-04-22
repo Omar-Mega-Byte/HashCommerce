@@ -10,7 +10,8 @@ from rest_framework import status, permissions
 
 from products.models import Product
 from .cart import Cart
-from .models import Transaction, TransactionItem
+from .forms import PaymentForm
+from .models import Transaction, TransactionItem, SecurePaymentInfo
 
 # Web views
 @require_POST
@@ -48,6 +49,60 @@ def cart_remove(request, product_id):
     cart.remove(product)
     messages.success(request, 'Product removed from cart!')
     return redirect('cart:cart_detail')
+
+@login_required
+def checkout(request):
+    """
+    Handle checkout process with secure payment information.
+    """
+    cart = Cart(request)
+    
+    if len(cart) == 0:
+        messages.warning(request, 'Your cart is empty.')
+        return redirect('cart:cart_detail')
+    
+    if request.method == 'POST':
+        form = PaymentForm(request.POST)
+        if form.is_valid():
+            # Create the transaction
+            transaction = Transaction.objects.create(
+                user=request.user,
+                total_amount=cart.get_total_price(),
+                tax_amount=cart.get_tax(),
+                shipping_amount=Decimal('50.00'),
+                payment_method=form.cleaned_data['payment_method'],
+                payment_status='completed',
+                shipping_address=form.cleaned_data['shipping_address'],
+                billing_address=form.cleaned_data['billing_address'],
+                notes=form.cleaned_data['notes']
+            )
+            
+            # Create transaction items
+            for item in cart:
+                TransactionItem.objects.create(
+                    transaction=transaction,
+                    product_id=item['id'],
+                    product_name=item['name'],
+                    product_price=item['price'],
+                    product_discount=item.get('discount'),
+                    quantity=item['quantity']
+                )
+            
+            # Save payment info with encryption
+            payment_info = form.save_payment_info(transaction)
+            
+            # Clear the cart
+            cart.clear()
+            
+            messages.success(request, f'Your order has been placed! Transaction ID: {transaction.id}')
+            return redirect('cart:transaction_detail', transaction_id=transaction.id)
+    else:
+        form = PaymentForm()
+    
+    return render(request, 'cart/checkout.html', {
+        'form': form,
+        'cart': cart
+    })
 
 @login_required
 def cart_clear(request):
@@ -90,7 +145,16 @@ def transaction_history(request):
 @login_required
 def transaction_detail(request, transaction_id):
     transaction = get_object_or_404(Transaction, id=transaction_id, user=request.user)
-    return render(request, 'cart/transaction_detail.html', {'transaction': transaction})
+    # Try to get secure payment info if available
+    try:
+        payment_info = transaction.secure_payment
+    except SecurePaymentInfo.DoesNotExist:
+        payment_info = None
+        
+    return render(request, 'cart/transaction_detail.html', {
+        'transaction': transaction,
+        'payment_info': payment_info
+    })
 
 # API views
 class CartAPIView(APIView):

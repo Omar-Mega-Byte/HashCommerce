@@ -120,7 +120,7 @@
                     </div>
                 </dl>
 
-                <form action="{% url 'cart:cart_clear' %}" method="POST" class="mt-6">
+                <form action="{% url 'cart:cart_clear' %}" method="POST" class="mt-6" id="checkout-form">
                     {% csrf_token %}
                     
                     <!-- Payment method selection -->
@@ -132,6 +132,7 @@
                                 <label for="credit_card" class="flex flex-col items-center justify-center text-center p-3 border rounded-md cursor-pointer peer-checked:bg-blue-50 peer-checked:border-blue-500">
                                     <i class="fab fa-cc-visa text-blue-700 text-2xl"></i>
                                     <span class="mt-2 text-xs font-medium">Credit Card</span>
+                                    <span class="mt-1 text-xs text-green-600 font-semibold"><i class="fas fa-lock text-xs"></i> Encrypted</span>
                                 </label>
                             </div>
                             
@@ -140,6 +141,7 @@
                                 <label for="paypal" class="flex flex-col items-center justify-center text-center p-3 border rounded-md cursor-pointer peer-checked:bg-blue-50 peer-checked:border-blue-500">
                                     <i class="fab fa-paypal text-blue-500 text-2xl"></i>
                                     <span class="mt-2 text-xs font-medium">PayPal</span>
+                                    <span class="mt-1 text-xs text-gray-500">Quick</span>
                                 </label>
                             </div>
                             
@@ -148,15 +150,24 @@
                                 <label for="cash_on_delivery" class="flex flex-col items-center justify-center text-center p-3 border rounded-md cursor-pointer peer-checked:bg-blue-50 peer-checked:border-blue-500">
                                     <i class="fas fa-money-bill-wave text-green-600 text-2xl"></i>
                                     <span class="mt-2 text-xs font-medium">Cash on Delivery</span>
+                                    <span class="mt-1 text-xs text-gray-500">Quick</span>
                                 </label>
                             </div>
                         </div>
                     </div>
                     
-                    <button type="submit" class="w-full bg-blue-600 border border-transparent rounded-md shadow-sm py-3 px-4 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                        Proceed to Checkout
+                    <button type="submit" id="quick-checkout-btn" class="w-full bg-blue-600 border border-transparent rounded-md shadow-sm py-3 px-4 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 mb-3">
+                        Quick Checkout
                     </button>
                 </form>
+                
+                <!-- Secure checkout with encryption -->
+                <a href="{% url 'cart:checkout' %}" id="secure-checkout-btn" class="block w-full bg-green-600 border border-transparent rounded-md shadow-sm py-3 px-4 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 text-center">
+                    <div class="flex items-center justify-center">
+                        <i class="fas fa-lock mr-2"></i>
+                        <span>Secure Checkout with Encryption</span>
+                    </div>
+                </a>
 
                 <!-- Shipping info -->
                 <div class="mt-6 text-sm text-gray-500">
@@ -227,4 +238,52 @@
         {% endif %}
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('checkout-form');
+        const creditCardRadio = document.getElementById('credit_card');
+        const paypalRadio = document.getElementById('paypal');
+        const cashRadio = document.getElementById('cash_on_delivery');
+        const quickCheckoutBtn = document.getElementById('quick-checkout-btn');
+        const secureCheckoutBtn = document.getElementById('secure-checkout-btn');
+        
+        // Initially set button visibility based on selected payment method
+        function updateButtonState() {
+            if (creditCardRadio.checked) {
+                quickCheckoutBtn.style.display = 'none';
+                secureCheckoutBtn.style.display = 'block';
+                secureCheckoutBtn.classList.add('animate-pulse');
+                setTimeout(() => {
+                    secureCheckoutBtn.classList.remove('animate-pulse');
+                }, 1000);
+            } else {
+                quickCheckoutBtn.style.display = 'block';
+                secureCheckoutBtn.style.display = 'none';
+                quickCheckoutBtn.classList.add('animate-pulse');
+                setTimeout(() => {
+                    quickCheckoutBtn.classList.remove('animate-pulse');
+                }, 1000);
+            }
+        }
+        
+        // Call once to set initial state
+        updateButtonState();
+        
+        // Update whenever a payment method is selected
+        creditCardRadio.addEventListener('change', updateButtonState);
+        paypalRadio.addEventListener('change', updateButtonState);
+        cashRadio.addEventListener('change', updateButtonState);
+        
+        // Prevent form submission for credit card - redirect to secure checkout instead
+        form.addEventListener('submit', function(e) {
+            if (creditCardRadio.checked) {
+                e.preventDefault();
+                window.location.href = "{% url 'cart:checkout' %}";
+            }
+        });
+    });
+</script>
 {% endblock %} 

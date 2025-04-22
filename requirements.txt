@@ -2,4 +2,5 @@ Django
 djangorestframework
 djangorestframework-simplejwt
 Pillow
-python-dotenv>
+python-dotenv
+cryptography

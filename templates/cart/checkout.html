@@ -1,0 +1,346 @@
+{% extends 'base.html' %}
+
+{% block title %}Secure Checkout{% endblock %}
+
+{% block meta_description %}Secure checkout page for your order with AES-256 encryption{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-2">Secure Checkout</h1>
+    <div class="flex items-center mb-6 p-2 bg-green-50 border border-green-200 rounded-md">
+        <i class="fas fa-shield-alt text-green-500 mr-2 text-lg"></i>
+        <p class="text-sm text-green-800">
+            You're using our secure checkout with <strong>AES-256 encryption</strong>. Your payment information will be encrypted before being stored.
+        </p>
+    </div>
+    
+    <!-- Cart Summary -->
+    <div class="mb-8 bg-white p-6 rounded-lg shadow-md">
+        <h2 class="text-xl font-semibold mb-4">Order Summary</h2>
+        <div class="border-b pb-4 mb-4">
+            {% for item in cart %}
+            <div class="flex justify-between items-center mb-2">
+                <div>
+                    <span class="font-medium">{{ item.quantity }}x</span> {{ item.name }}
+                </div>
+                <div class="text-gray-700">${{ item.total_price }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="flex justify-between mb-2">
+            <span>Subtotal:</span>
+            <span>${{ cart.get_total_price }}</span>
+        </div>
+        <div class="flex justify-between mb-2">
+            <span>Tax:</span>
+            <span>${{ cart.get_tax }}</span>
+        </div>
+        <div class="flex justify-between mb-2">
+            <span>Shipping:</span>
+            <span>$50.00</span>
+        </div>
+        <div class="flex justify-between font-semibold text-lg mt-2 pt-2 border-t">
+            <span>Total:</span>
+            <span>${{ cart.get_total_with_tax }}</span>
+        </div>
+    </div>
+    
+    <!-- Payment Form with Encryption -->
+    <div class="bg-white p-6 rounded-lg shadow-md">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold">Payment Information</h2>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                <i class="fas fa-lock mr-1"></i> AES-256 Encrypted
+            </span>
+        </div>
+        
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            
+            <!-- Shipping Address -->
+            <div>
+                <h3 class="text-lg font-medium mb-3">Shipping Information</h3>
+                <div class="mb-4">
+                    <label for="{{ form.shipping_address.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        Shipping Address <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.shipping_address }}
+                    {% if form.shipping_address.errors %}
+                    <p class="text-red-500 text-xs mt-1">{{ form.shipping_address.errors.0 }}</p>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-4">
+                    <label for="{{ form.billing_address.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        Billing Address <span class="text-red-500">*</span>
+                    </label>
+                    {{ form.billing_address }}
+                    {% if form.billing_address.errors %}
+                    <p class="text-red-500 text-xs mt-1">{{ form.billing_address.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Payment Method -->
+            <div>
+                <h3 class="text-lg font-medium mb-3">Payment Method</h3>
+                <div class="mb-4">
+                    <input type="hidden" name="{{ form.payment_method.name }}" value="credit_card">
+                    <div class="flex items-center p-3 bg-blue-50 border border-blue-200 rounded-md">
+                        <i class="fab fa-cc-visa text-blue-700 text-2xl mr-3"></i>
+                        <div>
+                            <span class="font-medium">Credit Card</span>
+                            <div class="text-xs text-gray-600 mt-1">Secured with AES-256 encryption</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Credit Card Information (Encrypted) -->
+            <div id="credit-card-fields">
+                <h3 class="text-lg font-medium mb-3">Credit Card Information</h3>
+                <p class="text-xs text-gray-500 mb-3 flex items-center">
+                    <i class="fas fa-shield-alt text-green-500 mr-1"></i> 
+                    This information will be encrypted with AES-256 before storage
+                </p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="mb-4">
+                        <label for="{{ form.card_holder_name.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                            Card Holder Name <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.card_holder_name }}
+                        {% if form.card_holder_name.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ form.card_holder_name.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="{{ form.card_number.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                            Card Number <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative">
+                            {{ form.card_number }}
+                            <div class="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
+                                <i id="card-icon-visa" class="fab fa-cc-visa text-blue-700 text-xl hidden"></i>
+                                <i id="card-icon-mastercard" class="fab fa-cc-mastercard text-red-600 text-xl hidden"></i>
+                                <i id="card-icon-amex" class="fab fa-cc-amex text-blue-500 text-xl hidden"></i>
+                                <i id="card-icon-discover" class="fab fa-cc-discover text-orange-600 text-xl hidden"></i>
+                                <i id="card-icon-unknown" class="fas fa-credit-card text-gray-400 text-xl"></i>
+                            </div>
+                        </div>
+                        {% if form.card_number.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ form.card_number.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="mb-4">
+                        <label for="{{ form.expiry_date.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                            Expiry Date (MM/YY) <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.expiry_date }}
+                        {% if form.expiry_date.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ form.expiry_date.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="{{ form.cvv.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                            CVV <span class="text-red-500">*</span>
+                        </label>
+                        {{ form.cvv }}
+                        {% if form.cvv.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ form.cvv.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Order Notes -->
+            <div class="mb-4">
+                <label for="{{ form.notes.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                    Order Notes (Optional)
+                </label>
+                {{ form.notes }}
+            </div>
+            
+            <!-- Security Message -->
+            <div class="p-3 bg-gray-50 border border-gray-200 rounded-md mb-4">
+                <div class="flex items-start">
+                    <i class="fas fa-lock text-gray-500 mr-3 mt-1"></i>
+                    <div class="text-xs text-gray-600">
+                        <p class="font-medium mb-1">Your payment information is fully secured:</p>
+                        <ul class="list-disc pl-4 space-y-1">
+                            <li>AES-256 encryption for all card details</li>
+                            <li>Data is encrypted before being stored</li>
+                            <li>Only the last 4 digits of your card are stored unencrypted</li>
+                            <li>We comply with PCI DSS requirements</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Submit Button -->
+            <div class="mt-6">
+                <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-md flex items-center justify-center">
+                    <i class="fas fa-lock mr-2"></i>
+                    Complete Secure Payment
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const cardInput = document.querySelector('#{{ form.card_number.id_for_label }}');
+        const cardIcons = {
+            visa: document.getElementById('card-icon-visa'),
+            mastercard: document.getElementById('card-icon-mastercard'),
+            amex: document.getElementById('card-icon-amex'),
+            discover: document.getElementById('card-icon-discover'),
+            unknown: document.getElementById('card-icon-unknown')
+        };
+        
+        function detectCardType(cardNumber) {
+            // Remove spaces and dashes
+            const num = cardNumber.replace(/\D/g, '');
+            
+            if (num.startsWith('4')) {
+                return 'visa';
+            } else if (/^5[1-5]/.test(num) || /^2[2-7]/.test(num)) {
+                return 'mastercard';
+            } else if (/^3[47]/.test(num)) {
+                return 'amex';
+            } else if (/^6(011|5|4[4-9])/.test(num)) {
+                return 'discover';
+            }
+            
+            return 'unknown';
+        }
+        
+        function updateCardIcon(cardType) {
+            // Hide all icons
+            Object.values(cardIcons).forEach(icon => {
+                if (icon) icon.classList.add('hidden');
+            });
+            
+            // Show the detected card icon
+            if (cardIcons[cardType]) {
+                cardIcons[cardType].classList.remove('hidden');
+            }
+            
+            // Update card input with specific styling based on card type
+            if (cardInput) {
+                // Reset any previous card-specific classes
+                cardInput.classList.remove('border-blue-500', 'border-red-500', 'border-green-500', 'border-orange-500');
+                
+                // Add card-specific styling
+                if (cardType === 'visa') {
+                    cardInput.classList.add('border-blue-500');
+                } else if (cardType === 'mastercard') {
+                    cardInput.classList.add('border-red-500');
+                } else if (cardType === 'amex') {
+                    cardInput.classList.add('border-green-500');
+                } else if (cardType === 'discover') {
+                    cardInput.classList.add('border-orange-500');
+                }
+            }
+        }
+        
+        if (cardInput) {
+            cardInput.addEventListener('input', function(e) {
+                // Get raw input and clean it
+                let value = e.target.value;
+                let rawValue = value.replace(/\D/g, '');
+                
+                // Detect card type based on number pattern
+                const cardType = detectCardType(rawValue);
+                updateCardIcon(cardType);
+                
+                // Format based on card type
+                let formattedValue = '';
+                
+                if (cardType === 'amex') {
+                    // AMEX format: XXXX XXXXXX XXXXX
+                    for (let i = 0; i < rawValue.length; i++) {
+                        if (i === 4 || i === 10) {
+                            formattedValue += ' ';
+                        }
+                        formattedValue += rawValue[i];
+                    }
+                } else {
+                    // Default format: XXXX XXXX XXXX XXXX
+                    for (let i = 0; i < rawValue.length; i++) {
+                        if (i > 0 && i % 4 === 0) {
+                            formattedValue += ' ';
+                        }
+                        formattedValue += rawValue[i];
+                    }
+                }
+                
+                // Update the input value
+                e.target.value = formattedValue;
+            });
+            
+            // Initial check when page loads (for card numbers that might be pre-filled)
+            if (cardInput.value) {
+                const cardType = detectCardType(cardInput.value);
+                updateCardIcon(cardType);
+            }
+        }
+        
+        // Format expiry date with slash
+        const expiryInput = document.querySelector('#{{ form.expiry_date.id_for_label }}');
+        
+        if (expiryInput) {
+            expiryInput.addEventListener('input', function(e) {
+                // Remove any non-digit characters
+                let value = e.target.value.replace(/\D/g, '');
+                
+                // Format as MM/YY
+                if (value.length > 0) {
+                    // Ensure month is valid (01-12)
+                    if (value.length >= 2) {
+                        const month = parseInt(value.substring(0, 2));
+                        if (month > 12) {
+                            value = '12' + value.substring(2);
+                        } else if (month === 0) {
+                            value = '01' + value.substring(2);
+                        }
+                    }
+                    
+                    // Add slash after month
+                    if (value.length > 2) {
+                        value = value.substring(0, 2) + '/' + value.substring(2, 4);
+                    }
+                }
+                
+                // Update the input value
+                e.target.value = value;
+            });
+            
+            // Ensure trailing slash when user enters just the month
+            expiryInput.addEventListener('blur', function(e) {
+                const value = e.target.value;
+                if (value.length === 2 && !value.includes('/')) {
+                    e.target.value = value + '/';
+                }
+            });
+        }
+        
+        // Improve CVV input
+        const cvvInput = document.querySelector('#{{ form.cvv.id_for_label }}');
+        if (cvvInput) {
+            cvvInput.addEventListener('input', function(e) {
+                // Only allow digits
+                e.target.value = e.target.value.replace(/\D/g, '');
+            });
+        }
+    });
+</script>
+{% endblock %} 
